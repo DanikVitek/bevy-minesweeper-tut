@@ -2,7 +2,7 @@ pub mod components;
 pub mod resources;
 mod systems;
 
-use bevy::{log, math::Vec3Swizzles, prelude::*, sprite::Anchor};
+use bevy::{log, math::Vec3Swizzles, prelude::*, sprite::Anchor, utils::HashMap};
 use components::{Bomb, BombNeighbor};
 use resources::{BoardOptions, Tile};
 
@@ -134,6 +134,9 @@ impl BoardPlugin {
         font: Handle<Font>,
         bomb_image: Handle<Image>,
     ) {
+        let mut covered_tiles =
+            HashMap::with_capacity((tile_map.width() * tile_map.height()) as usize);
+
         commands
             .spawn_empty()
             .insert(Name::new("Board"))
@@ -166,6 +169,8 @@ impl BoardPlugin {
                     Color::GRAY,
                     bomb_image,
                     font,
+                    Color::DARK_GRAY,
+                    &mut covered_tiles,
                 );
             });
 
@@ -179,6 +184,7 @@ impl BoardPlugin {
                 }
             },
             tile_size,
+            covered_tiles,
         });
     }
 
@@ -190,6 +196,8 @@ impl BoardPlugin {
         color: Color,
         bomb_image: Handle<Image>,
         font: Handle<Font>,
+        covered_tile_color: Color,
+        covered_tiles: &mut HashMap<Coordinates, Entity>,
     ) {
         // Tiles
         for (y, line) in tile_map.iter().enumerate() {
@@ -213,7 +221,23 @@ impl BoardPlugin {
                     ..Default::default()
                 })
                 .insert(Name::new(format!("Tile ({}, {})", x, y)))
-                .insert(coordinates);
+                .insert(coordinates)
+                // We add the cover sprites
+                .with_children(|parent| {
+                    let entity = parent
+                        .spawn(SpriteBundle {
+                            sprite: Sprite {
+                                custom_size: Some(Vec2::splat(size - padding)),
+                                color: covered_tile_color,
+                                ..Default::default()
+                            },
+                            transform: Transform::from_xyz(0., 0., 3.),
+                            ..Default::default()
+                        })
+                        .insert(Name::new("Tile Cover"))
+                        .id();
+                    covered_tiles.insert(coordinates, entity);
+                });
 
                 match tile {
                     Tile::Bomb => {

@@ -17,18 +17,16 @@ pub fn input_handling(
             continue;
         };
 
-        if !matches!(&event.button, MouseButton::Left | MouseButton::Right) {
+        if !matches!(event.button, MouseButton::Left | MouseButton::Right) {
             continue;
         }
 
-        let position = window.cursor_position();
-        let Some(pos) = position else {
+        let Some(pos) = window.cursor_position() else {
             continue;
         };
 
         log::trace!("Mouse button pressed: {:?} at {pos}", event.button);
-        let tile_coordinates = board.mouse_position(window, pos);
-        let Some(coordinates) = tile_coordinates else {
+        let Some(coordinates) = board.mouse_position(window, pos) else {
             continue;
         };
 
