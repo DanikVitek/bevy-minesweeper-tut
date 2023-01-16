@@ -4,7 +4,9 @@ pub mod resource;
 mod system;
 
 use bevy::{log, math::Vec3Swizzles, prelude::*, sprite::Anchor, utils::HashMap};
-use component::{Bomb, BombNeighbor, Coordinates};
+
+use component::{Bomb, BombNeighbor, Coordinates, Uncover};
+use event::TileTriggerEvent;
 use resource::{Board, BoardOptions, BoardPosition, Tile, TileMap, TileSize};
 
 pub struct BoardPlugin;
@@ -12,20 +14,20 @@ pub struct BoardPlugin;
 impl Plugin for BoardPlugin {
     fn build(&self, app: &mut App) {
         #[cfg(feature = "debug")]
-        {
-            use component::Uncover;
-            app.register_type::<Coordinates>()
-                .register_type::<Bomb>()
-                .register_type::<BombNeighbor>()
-                .register_type::<Uncover>()
-                .register_type::<TileMap>()
-                .register_type::<Board>()
-                .register_type::<BoardOptions>()
-                .register_type::<TileSize>();
-        }
+        app.register_type::<Coordinates>()
+            .register_type::<Bomb>()
+            .register_type::<BombNeighbor>()
+            .register_type::<Uncover>()
+            .register_type::<TileMap>()
+            .register_type::<Board>()
+            .register_type::<BoardOptions>()
+            .register_type::<TileSize>();
 
         app.add_startup_system(Self::create_board)
-            .add_system(system::input::input_handling);
+            .add_system(system::input::input_handling)
+            .add_event::<TileTriggerEvent>()
+            .add_system(system::uncover::trigger_event_handler)
+            .add_system(system::uncover::uncover_tiles);
         log::info!("Loaded Board Plugin");
     }
 }
@@ -139,6 +141,8 @@ impl BoardPlugin {
         let mut covered_tiles =
             HashMap::with_capacity((tile_map.width() * tile_map.height()) as usize);
 
+        let mut safe_start = None;
+
         commands
             .spawn_empty()
             .insert(Name::new("Board"))
@@ -173,8 +177,15 @@ impl BoardPlugin {
                     font,
                     Color::DARK_GRAY,
                     &mut covered_tiles,
+                    &mut safe_start,
                 );
             });
+
+        if board_options.safe_start {
+            if let Some(entity) = safe_start {
+                commands.entity(entity).insert(Uncover);
+            }
+        }
 
         commands.insert_resource(Board {
             tile_map,
@@ -201,6 +212,7 @@ impl BoardPlugin {
         font: Handle<Font>,
         covered_tile_color: Color,
         covered_tiles: &mut HashMap<Coordinates, Entity>,
+        safe_start_entity: &mut Option<Entity>,
     ) {
         // Tiles
         for (y, line) in tile_map.iter().enumerate() {
@@ -240,6 +252,10 @@ impl BoardPlugin {
                         .insert(Name::new("Tile Cover"))
                         .id();
                     covered_tiles.insert(coordinates, entity);
+
+                    if safe_start_entity.is_none() && *tile == Tile::Empty {
+                        *safe_start_entity = Some(entity);
+                    }
                 });
 
                 match tile {
