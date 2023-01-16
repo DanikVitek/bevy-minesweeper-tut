@@ -1,17 +1,17 @@
 use bevy::prelude::Component;
+use derive_more::From;
 
 #[cfg(feature = "debug")]
-use bevy::prelude::{Reflect, ReflectResource, Resource};
+use bevy::prelude::Reflect;
 #[cfg(feature = "debug")]
 use bevy_inspector_egui::prelude::*;
-use derive_more::From;
 
 /// Bomb neighbor component
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Component, Default, From)]
 #[cfg_attr(
     feature = "debug",
-    derive(Resource, InspectorOptions, Reflect),
-    reflect(InspectorOptions, Resource)
+    derive(InspectorOptions, Reflect),
+    reflect(InspectorOptions)
 )]
 pub struct BombNeighbor {
     /// Number of neighbor bombs

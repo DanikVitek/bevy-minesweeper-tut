@@ -1,7 +1,15 @@
 use crate::{Coordinates, TileMap};
 use bevy::{prelude::*, utils::HashMap};
 
+#[cfg(feature = "debug")]
+use bevy_inspector_egui::prelude::*;
+
 #[derive(Debug, Resource)]
+#[cfg_attr(
+    feature = "debug",
+    derive(InspectorOptions, Reflect, Default),
+    reflect(InspectorOptions, Resource)
+)]
 pub struct Board {
     pub tile_map: TileMap,
     pub bounds: Rect,

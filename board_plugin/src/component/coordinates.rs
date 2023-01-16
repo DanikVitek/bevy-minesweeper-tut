@@ -2,7 +2,7 @@ use bevy::prelude::Component;
 use derive_more::{Add, Display, From, Sub};
 
 #[cfg(feature = "debug")]
-use bevy::prelude::{Reflect, ReflectResource, Resource};
+use bevy::prelude::{Reflect, FromReflect};
 #[cfg(feature = "debug")]
 use bevy_inspector_egui::prelude::*;
 
@@ -24,8 +24,8 @@ use bevy_inspector_egui::prelude::*;
 )]
 #[cfg_attr(
     feature = "debug",
-    derive(Resource, InspectorOptions, Reflect),
-    reflect(InspectorOptions, Resource)
+    derive(InspectorOptions, Reflect, FromReflect),
+    reflect(InspectorOptions)
 )]
 #[display(fmt = "({}, {})", x, y)]
 pub struct Coordinates {

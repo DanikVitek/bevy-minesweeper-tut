@@ -1,6 +1,7 @@
 pub mod component;
+mod event;
 pub mod resource;
-mod systems;
+mod system;
 
 use bevy::{log, math::Vec3Swizzles, prelude::*, sprite::Anchor, utils::HashMap};
 use component::{Bomb, BombNeighbor, Coordinates};
@@ -12,15 +13,19 @@ impl Plugin for BoardPlugin {
     fn build(&self, app: &mut App) {
         #[cfg(feature = "debug")]
         {
+            use component::Uncover;
             app.register_type::<Coordinates>()
                 .register_type::<Bomb>()
                 .register_type::<BombNeighbor>()
-                .register_type::<component::Uncover>()
-                .register_type::<Board>();
+                .register_type::<Uncover>()
+                .register_type::<TileMap>()
+                .register_type::<Board>()
+                .register_type::<BoardOptions>()
+                .register_type::<TileSize>();
         }
 
         app.add_startup_system(Self::create_board)
-            .add_system(systems::input::input_handling);
+            .add_system(system::input::input_handling);
         log::info!("Loaded Board Plugin");
     }
 }
@@ -120,6 +125,7 @@ impl BoardPlugin {
         }
     }
 
+    #[allow(clippy::too_many_arguments)]
     fn spawn_board(
         mut commands: Commands,
         board_position: Vec3,
@@ -184,6 +190,7 @@ impl BoardPlugin {
         });
     }
 
+    #[allow(clippy::too_many_arguments)]
     fn spawn_tiles(
         parent: &mut ChildBuilder,
         tile_map: &TileMap,

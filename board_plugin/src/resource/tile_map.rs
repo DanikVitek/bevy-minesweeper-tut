@@ -1,11 +1,21 @@
+use bevy::prelude::Resource;
 use derive_more::{Deref, DerefMut};
 use rand::Rng;
 
-use crate::component::Coordinates;
-use crate::resource::Tile;
+use crate::{component::Coordinates, resource::Tile};
+
+#[cfg(feature = "debug")]
+use bevy_inspector_egui::prelude::*;
+#[cfg(feature = "debug")]
+use bevy::prelude::{Reflect, ReflectResource};
 
 /// Base tile map
-#[derive(Debug, Clone, Deref, DerefMut)]
+#[derive(Debug, Clone, Deref, DerefMut, Resource)]
+#[cfg_attr(
+    feature = "debug",
+    derive(Reflect, InspectorOptions, Default),
+    reflect(Resource, InspectorOptions)
+)]
 pub struct TileMap {
     bomb_count: u16,
     height: u16,
