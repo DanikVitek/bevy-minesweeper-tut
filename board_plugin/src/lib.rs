@@ -1,15 +1,10 @@
-pub mod components;
-pub mod resources;
+pub mod component;
+pub mod resource;
 mod systems;
 
 use bevy::{log, math::Vec3Swizzles, prelude::*, sprite::Anchor, utils::HashMap};
-use components::{Bomb, BombNeighbor};
-use resources::{BoardOptions, Tile};
-
-use crate::{
-    components::Coordinates,
-    resources::{Board, BoardPosition, TileMap, TileSize},
-};
+use component::{Bomb, BombNeighbor, Coordinates};
+use resource::{Board, BoardOptions, BoardPosition, Tile, TileMap, TileSize};
 
 pub struct BoardPlugin;
 
@@ -17,10 +12,11 @@ impl Plugin for BoardPlugin {
     fn build(&self, app: &mut App) {
         #[cfg(feature = "debug")]
         {
-            app.register_type::<components::Coordinates>()
-                .register_type::<components::Bomb>()
-                .register_type::<components::BombNeighbor>()
-                .register_type::<components::Uncover>();
+            app.register_type::<Coordinates>()
+                .register_type::<Bomb>()
+                .register_type::<BombNeighbor>()
+                .register_type::<component::Uncover>()
+                .register_type::<Board>();
         }
 
         app.add_startup_system(Self::create_board)

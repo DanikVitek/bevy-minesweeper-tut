@@ -1,8 +1,8 @@
 use derive_more::{Deref, DerefMut};
 use rand::Rng;
 
-use crate::components::Coordinates;
-use crate::resources::Tile;
+use crate::component::Coordinates;
+use crate::resource::Tile;
 
 /// Base tile map
 #[derive(Debug, Clone, Deref, DerefMut)]

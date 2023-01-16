@@ -3,7 +3,7 @@ use bevy::prelude::*;
 #[cfg(feature = "debug")]
 use bevy_inspector_egui::quick::WorldInspectorPlugin;
 
-use board_plugin::resources::BoardOptions;
+use board_plugin::resource::BoardOptions;
 use board_plugin::BoardPlugin;
 
 fn main() {
