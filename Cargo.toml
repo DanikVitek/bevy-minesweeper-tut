@@ -30,7 +30,7 @@ board_plugin = { path="./board_plugin" }
 
 [dependencies.derive_more]
 version = "0.99"
-deault-features = false
+default-features = false
 features = ["is_variant"]
 
 [workspace]

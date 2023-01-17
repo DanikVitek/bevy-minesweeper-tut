@@ -12,7 +12,8 @@ use board_plugin::{resource::BoardOptions, BoardPlugin};
 #[derive(Debug, Clone, Eq, PartialEq, Hash, IsVariant)]
 pub enum AppState {
     InGame,
-    Out,
+    Unloading,
+    Loading,
 }
 
 fn main() {
@@ -24,6 +25,7 @@ fn main() {
                     title: "Mine Sweeper".to_owned(),
                     width: 800.,
                     height: 700.,
+                    position: WindowPosition::Centered,
                     ..Default::default()
                 },
                 ..default()
@@ -57,19 +59,21 @@ fn camera_setup(mut commands: Commands) {
 }
 
 fn state_handling(mut state: ResMut<State<AppState>>, key: Res<Input<KeyCode>>) {
-    if key.just_pressed(KeyCode::C) {
-        log::debug!("Clearing detected! Current state: {state:?}");
-        if state.current().is_in_game() {
-            log::info!("Clearing game");
-            state.set(AppState::Out).unwrap();
-        }
+    if state.current().is_unloading() {
+        log::info!("Loading game");
+        state.set(AppState::Loading).unwrap();
+    }
+
+    if state.current().is_loading() {
+        log::info!("Starting game");
+        state.set(AppState::InGame).unwrap();
     }
 
     if key.just_pressed(KeyCode::G) {
-        log::debug!("Loading detected! Current state: {state:?}");
-        if state.current().is_out() {
-            log::info!("Loading game");
-            state.set(AppState::InGame).unwrap();
+        log::debug!("Reloading detected! Current state: {state:?}");
+        if state.current().is_in_game() {
+            log::info!("Unloading game");
+            state.set(AppState::Unloading).unwrap();
         }
     }
 }

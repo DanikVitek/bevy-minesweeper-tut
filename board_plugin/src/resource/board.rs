@@ -15,7 +15,7 @@ pub struct Board {
     pub bounds: Rect,
     pub tile_size: f32,
     pub covered_tiles: HashMap<Coordinates, Entity>,
-    pub entity: Entity,
+    pub entity: Option<Entity>,
 }
 
 impl Board {

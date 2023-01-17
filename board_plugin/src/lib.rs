@@ -11,6 +11,8 @@ use component::{Bomb, BombNeighbor, Coordinates, Uncover};
 use event::TileTriggerEvent;
 use resource::{Board, BoardOptions, BoardPosition, Tile, TileMap, TileSize};
 
+use crate::resource::LoadedAssets;
+
 pub struct BoardPlugin<T> {
     pub running_state: T,
 }
@@ -50,7 +52,7 @@ impl<T: StateData> Plugin for BoardPlugin<T> {
 impl<T> BoardPlugin<T> {
     /// System to generate the complete board
     pub fn create_board(
-        commands: Commands,
+        mut commands: Commands,
         board_options: Option<Res<BoardOptions>>,
         windows: Res<Windows>,
         asset_server: Res<AssetServer>,
@@ -61,6 +63,9 @@ impl<T> BoardPlugin<T> {
         };
         let font: Handle<Font> = asset_server.load("fonts/pixeled.ttf");
         let bomb_image: Handle<Image> = asset_server.load("sprites/bomb.png");
+
+        log::debug!("Font: {font:?}");
+        log::debug!("Bomb image: {bomb_image:?}");
 
         // Tilemap generation
         let mut tile_map = TileMap::empty(board_options.map_size.0, board_options.map_size.1);
@@ -96,6 +101,9 @@ impl<T> BoardPlugin<T> {
             BoardPosition::Custom(p) => p,
         };
 
+        let loaded_assets = LoadedAssets { bomb_image, font };
+        commands.insert_resource(loaded_assets.clone());
+
         Self::spawn_board(
             commands,
             board_position,
@@ -103,8 +111,7 @@ impl<T> BoardPlugin<T> {
             tile_map,
             tile_size,
             board_options,
-            font,
-            bomb_image,
+            &loaded_assets,
         );
     }
 
@@ -150,8 +157,7 @@ impl<T> BoardPlugin<T> {
         tile_map: TileMap,
         tile_size: f32,
         board_options: BoardOptions,
-        font: Handle<Font>,
-        bomb_image: Handle<Image>,
+        loaded_assets: &LoadedAssets,
     ) {
         let mut covered_tiles =
             HashMap::with_capacity((tile_map.width() * tile_map.height()) as usize);
@@ -188,8 +194,7 @@ impl<T> BoardPlugin<T> {
                     tile_size,
                     board_options.tile_padding,
                     Color::GRAY,
-                    bomb_image,
-                    font,
+                    loaded_assets,
                     Color::DARK_GRAY,
                     &mut covered_tiles,
                     &mut safe_start,
@@ -214,7 +219,7 @@ impl<T> BoardPlugin<T> {
             },
             tile_size,
             covered_tiles,
-            entity: board_entity,
+            entity: Some(board_entity),
         });
     }
 
@@ -225,8 +230,7 @@ impl<T> BoardPlugin<T> {
         size: f32,
         padding: f32,
         color: Color,
-        bomb_image: Handle<Image>,
-        font: Handle<Font>,
+        loaded_assets: &LoadedAssets,
         covered_tile_color: Color,
         covered_tiles: &mut HashMap<Coordinates, Entity>,
         safe_start_entity: &mut Option<Entity>,
@@ -284,7 +288,7 @@ impl<T> BoardPlugin<T> {
                                     ..Default::default()
                                 },
                                 transform: Transform::from_xyz(0., 0., 2.),
-                                texture: bomb_image.clone(),
+                                texture: loaded_assets.bomb_image.clone(),
                                 ..Default::default()
                             });
                         });
@@ -294,7 +298,7 @@ impl<T> BoardPlugin<T> {
                             .with_children(|parent| {
                                 parent.spawn(Self::bomb_count_text_bundle(
                                     *n,
-                                    font.clone(),
+                                    loaded_assets.font.clone(),
                                     size - padding,
                                 ));
                             });
@@ -317,7 +321,7 @@ impl<T> BoardPlugin<T> {
     }
 
     fn cleanup_board(mut commands: Commands, board: Res<Board>) {
-        commands.entity(board.entity).despawn_recursive();
+        commands.entity(board.entity.unwrap()).despawn_recursive();
         commands.remove_resource::<Board>();
     }
 }
