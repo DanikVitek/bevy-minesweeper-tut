@@ -12,8 +12,7 @@ use board_plugin::{resource::BoardOptions, BoardPlugin};
 #[derive(Debug, Clone, Eq, PartialEq, Hash, IsVariant)]
 pub enum AppState {
     InGame,
-    Unloading,
-    Loading,
+    Reloading,
 }
 
 fn main() {
@@ -59,21 +58,16 @@ fn camera_setup(mut commands: Commands) {
 }
 
 fn state_handling(mut state: ResMut<State<AppState>>, key: Res<Input<KeyCode>>) {
-    if state.current().is_unloading() {
+    if state.current().is_reloading() {
         log::info!("Loading game");
-        state.set(AppState::Loading).unwrap();
-    }
-
-    if state.current().is_loading() {
-        log::info!("Starting game");
         state.set(AppState::InGame).unwrap();
     }
 
     if key.just_pressed(KeyCode::G) {
         log::debug!("Reloading detected! Current state: {state:?}");
         if state.current().is_in_game() {
-            log::info!("Unloading game");
-            state.set(AppState::Unloading).unwrap();
+            log::info!("Reloading game");
+            state.set(AppState::Reloading).unwrap();
         }
     }
 }
